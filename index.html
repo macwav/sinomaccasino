@@ -114,7 +114,7 @@
       scrollbar-width: none;
       -ms-overflow-style: none;
       flex: 1;
-      justify-content: center;
+      justify-content: flex-start;
     }
 
     .nav-menu::-webkit-scrollbar {
@@ -124,7 +124,27 @@
     @media (min-width: 768px) {
       .nav-menu {
         gap: 6px;
+        justify-content: center;
       }
+    }
+
+    /* Allow topbar children to shrink properly on narrow screens */
+    .topbar > div { min-width: 0; }
+    .nav-menu { min-width: 0; }
+    .nav-menu .nav-btn { flex-shrink: 0; }
+
+    /* Mobile-specific topbar adjustments */
+    @media (max-width: 640px) {
+      .logo span#casinoName { display: none; }
+      .nav-menu { justify-content: flex-start; gap: 6px; }
+      .nav-menu .nav-btn { font-size: 0; padding: 6px 8px; }
+      .nav-menu .nav-btn svg { width: 20px; height: 20px; }
+      .credits-amount { font-size: 13px; }
+      .topbar { padding: 8px 12px; }
+      .add-credits-btn { padding: 6px 10px; font-size: 13px; }
+      /* show hamburger and hide inline nav on mobile */
+      #hamburgerBtn { display: inline-flex !important; }
+      .nav-menu { display: none !important; }
     }
 
     .nav-btn {
@@ -1703,12 +1723,17 @@
  </head>
  <body>
   <header class="topbar">
-   <div style="display: flex; align-items: center; gap: 32px;">
-    <div class="logo">
-     <div class="logo-icon">
-      <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z" />
-      </svg>
-     </div><span id="casinoName">Mac To����ky</span>
+   <div style="display: flex; align-items: center; gap: 12px;">
+    <div style="display:flex; align-items:center; gap:8px;">
+      <button id="hamburgerBtn" aria-label="Otevřít menu" class="nav-btn" style="display:none; background:transparent; border:none;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+      </button>
+      <div class="logo">
+       <div class="logo-icon">
+        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+       </div><span id="casinoName">Mac Točky</span>
+      </div>
     </div>
     <nav class="nav-menu"><button class="nav-btn active" data-game="slots">
       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -1732,6 +1757,22 @@
      </svg> Nastavení </button>
    </div>
   </header>
+  <!-- Mobile nav overlay/drawer -->
+  <div id="mobileNavOverlay" aria-hidden="true" style="position:fixed; inset:0; display:none; z-index:1200;">
+    <div id="mobileNavBg" style="position:absolute; inset:0; background:rgba(0,0,0,0.6);"></div>
+    <aside id="mobileNavDrawer" style="position:absolute; top:0; left:0; height:100%; width:280px; max-width:80%; background:var(--bg-secondary); border-right:1px solid var(--border-medium); box-shadow:2px 0 20px rgba(0,0,0,0.6); padding:18px; display:flex; flex-direction:column; gap:12px;">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+        <div style="display:flex; align-items:center; gap:8px;"><div class="logo-icon" style="width:28px;height:28px;border-radius:7px;"></div><strong>Mac Točky</strong></div>
+        <button id="mobileNavClose" aria-label="Zavřít" class="nav-btn" style="background:transparent; border:none;">✕</button>
+      </div>
+      <nav style="display:flex; flex-direction:column; gap:8px; margin-top:8px;">
+        <button class="nav-btn nav-drawer-btn active" data-game="slots">🎰 Slots</button>
+        <button class="nav-btn nav-drawer-btn" data-game="blackjack">🃏 Blackjack</button>
+        <button class="nav-btn nav-drawer-btn" data-game="roulette">🎲 Ruleta</button>
+        <button class="nav-btn nav-drawer-btn" data-game="craps">🎲 Craps</button>
+      </nav>
+    </aside>
+  </div>
   <main class="container"><!-- SLOTS GAME -->
    <div class="game-screen active" id="slotsScreen">
     <article class="slot-machine">
@@ -1967,7 +2008,7 @@
       </div>
      </div>
      <div style="background: var(--bg-secondary); border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 32px;">
-      <h2 style="font-size: 20px; font-weight: 600; margin-bottom: 24px;">Historie transakc��</h2>
+      <h2 style="font-size: 20px; font-weight: 600; margin-bottom: 24px;">Historie transakcí</h2>
       <div style="max-height: 400px; overflow-y: auto;" id="transactionHistory"></div>
      </div>
     </div>
@@ -1986,14 +2027,14 @@
      </div>
      <div class="dice-area">
       <div class="dice" id="dice1">
-       <div class="dice-result">
-        ?
-       </div>
+      <div class="dice-result">
+       —
+      </div>
       </div>
       <div class="dice" id="dice2">
-       <div class="dice-result">
-        ?
-       </div>
+      <div class="dice-result">
+       —
+      </div>
       </div>
      </div>
      <div style="text-align: center; margin-bottom: 32px;">
@@ -2322,7 +2363,7 @@
     // ========== SLOTS GAME ==========
     const slotsGame = {
       symbols: ['🍒', '🍋', '💎', '⭐', '🍇', '🔔', '💰', '🎰'],
-      payouts: { '💎': 15, '🎰': 12, '💰': 10, '⭐': 6, '🔔': 5, '��': 3, '🍋': 3, '🍒': 3 },
+      payouts: { '💎': 15, '🎰': 12, '💰': 10, '⭐': 6, '🔔': 5, '🍇': 3, '🍋': 3, '🍒': 3 },
       bet: 50,
       maxBet: 5000,
       isSpinning: false,
@@ -2390,7 +2431,7 @@
       async spin() {
         if (this.isSpinning || !wallet.canDeduct(this.bet)) {
           if (!wallet.canDeduct(this.bet)) {
-            showNotification('Nedostatek kreditů', 'Pro další točen��� potřebujete více kreditů!', 'error');
+            showNotification('Nedostatek kreditů', 'Pro další točení potřebujete více kreditů!', 'error');
           }
           return;
         }
@@ -2504,7 +2545,7 @@
       },
 
       createDeck() {
-        const suits = ['♠', '♥', '��', '♣'];
+        const suits = ['♠', '♥', '♦', '♣'];
         const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
         this.deck = [];
         
@@ -2647,7 +2688,7 @@
 
       async double() {
         if (!wallet.canDeduct(this.bet)) {
-          showNotification('Nedostatek kreditů', 'Nemáte dostatek kredit���� pro double!');
+          showNotification('Nedostatek kreditů', 'Nemáte dostatek kreditů pro double!');
           return;
         }
 
@@ -2737,7 +2778,7 @@
           winAmount = this.bet;
           wallet.credit(winAmount, 'Blackjack push');
           updateCreditsDisplay();
-          message = `🤝 REM��ZA! Vráceno ${winAmount} kreditů`;
+          message = `🤝 REMÍZA! Vráceno ${winAmount} kreditů`;
           await recordTransaction('win', winAmount, 'Blackjack push', 'blackjack', 'PUSH');
         }
 
@@ -3339,7 +3380,7 @@
         if (this.isSpinning) return;
 
         if (!wallet.canDeduct(this.selectedChip)) {
-          showNotification('Nedostatek kreditů', 'Nem��te dostatek kreditů!', 'error');
+          showNotification('Nedostatek kreditů', 'Nemáte dostatek kreditů!', 'error');
           return;
         }
 
@@ -3881,7 +3922,7 @@
       });
 
       if (wins.length === 0) {
-        biggestWinsEl.innerHTML = '<div style="color: var(--text-secondary); text-align: center; padding: 20px;">Zatím ž����dné výhry</div>';
+        biggestWinsEl.innerHTML = '<div style="color: var(--text-secondary); text-align: center; padding: 20px;">Zatím žádné výhry</div>';
       }
 
       // Transaction History
@@ -3891,9 +3932,9 @@
       historyEl.innerHTML = '';
       recentTransactions.forEach(txn => {
         const date = new Date(txn.timestamp);
-        const typeLabel = txn.type === 'win' ? '✅ Výhra' : txn.type === 'bet' ? '🎲 Sázka' : txn.type === 'purchase' ? '��� N��kup' : '❌ Prohra';
+        const typeLabel = txn.type === 'win' ? '✅ Výhra' : txn.type === 'bet' ? '🎲 Sázka' : txn.type === 'purchase' ? '💳 Nákup' : '❌ Prohra';
         const amountColor = txn.amount >= 0 ? 'var(--color-green)' : 'var(--color-red)';
-        const gameIcon = txn.game === 'slots' ? '����' : txn.game === 'blackjack' ? '🃏' : txn.game === 'roulette' ? '🎲' : '💰';
+        const gameIcon = txn.game === 'slots' ? '🎰' : txn.game === 'blackjack' ? '🃏' : txn.game === 'roulette' ? '🎲' : '💰';
 
         historyEl.innerHTML += `
           <div class="transaction-item">
@@ -3914,6 +3955,42 @@
         historyEl.innerHTML = '<div style="color: var(--text-secondary); text-align: center; padding: 20px;">Zatím žádné transakce</div>';
       }
     }
+
+    // Mobile nav toggle
+    (function(){
+      const hamburger = document.getElementById('hamburgerBtn');
+      const overlay = document.getElementById('mobileNavOverlay');
+      const bg = document.getElementById('mobileNavBg');
+      const closeBtn = document.getElementById('mobileNavClose');
+      const drawerBtns = document.querySelectorAll('.nav-drawer-btn');
+      if (!hamburger || !overlay) return;
+
+      function openNav(){
+        overlay.style.display = 'block';
+        overlay.setAttribute('aria-hidden','false');
+        document.body.style.overflow = 'hidden';
+      }
+      function closeNav(){
+        overlay.style.display = 'none';
+        overlay.setAttribute('aria-hidden','true');
+        document.body.style.overflow = '';
+      }
+
+      hamburger.addEventListener('click', openNav);
+      if (bg) bg.addEventListener('click', closeNav);
+      if (closeBtn) closeBtn.addEventListener('click', closeNav);
+
+      drawerBtns.forEach(btn=> btn.addEventListener('click', (e)=>{
+        const game = btn.dataset.game;
+        // switch game via existing nav buttons
+        document.querySelectorAll('.nav-btn').forEach(n=> n.classList.remove('active'));
+        const target = document.querySelector(`.nav-btn[data-game="${game}"]`);
+        if (target) target.classList.add('active');
+        // trigger click to change screens if handler attached
+        if (target) target.click();
+        closeNav();
+      }));
+    })();
 
     // ========== CREDIT PURCHASE SYSTEM ==========
     function openCreditModal() {
