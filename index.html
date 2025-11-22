@@ -143,9 +143,16 @@
       .topbar { padding: 8px 12px; }
       .add-credits-btn { padding: 6px 10px; font-size: 13px; }
       /* show hamburger and hide inline nav on mobile */
-      #hamburgerBtn { display: inline-flex !important; }
+      #hamburgerBtn { display: inline-flex !important; position: relative; z-index: 300; }
       .nav-menu { display: none !important; }
     }
+
+    /* Mobile drawer styling */
+    #mobileNavOverlay { display: none; }
+    #mobileNavDrawer { transform: translateX(-100%); transition: transform 280ms cubic-bezier(.2,.8,.2,1); }
+    #mobileNavOverlay[aria-hidden="false"] #mobileNavDrawer { transform: translateX(0); }
+    .nav-drawer-btn { background: transparent; border: none; text-align: left; padding: 12px 14px; font-weight:700; border-radius:8px; color:var(--text-primary); }
+    .nav-drawer-btn.active { background: rgba(255,255,255,0.04); border:1px solid var(--border-medium); }
 
     .nav-btn {
       background: transparent;
@@ -3956,29 +3963,51 @@
       }
     }
 
-    // Mobile nav toggle
+    // Mobile nav toggle with animation, ESC close, and focus management
     (function(){
       const hamburger = document.getElementById('hamburgerBtn');
       const overlay = document.getElementById('mobileNavOverlay');
       const bg = document.getElementById('mobileNavBg');
       const closeBtn = document.getElementById('mobileNavClose');
+      const drawer = document.getElementById('mobileNavDrawer');
       const drawerBtns = document.querySelectorAll('.nav-drawer-btn');
-      if (!hamburger || !overlay) return;
+      if (!hamburger || !overlay || !drawer) return;
+
+      let lastFocused = null;
 
       function openNav(){
+        lastFocused = document.activeElement;
         overlay.style.display = 'block';
         overlay.setAttribute('aria-hidden','false');
         document.body.style.overflow = 'hidden';
+        // trigger CSS transform by setting aria-hidden
+        requestAnimationFrame(()=> overlay.setAttribute('aria-hidden','false'));
+        // focus first button
+        const first = drawer.querySelector('.nav-drawer-btn');
+        if (first) first.focus();
       }
+
       function closeNav(){
-        overlay.style.display = 'none';
         overlay.setAttribute('aria-hidden','true');
+        // wait for transition then hide from layout
+        drawer.addEventListener('transitionend', function handler(){
+          overlay.style.display = 'none';
+          drawer.removeEventListener('transitionend', handler);
+        });
         document.body.style.overflow = '';
+        if (lastFocused) lastFocused.focus();
       }
 
       hamburger.addEventListener('click', openNav);
       if (bg) bg.addEventListener('click', closeNav);
       if (closeBtn) closeBtn.addEventListener('click', closeNav);
+
+      // close on ESC
+      document.addEventListener('keydown', (e)=>{
+        if (e.key === 'Escape' && overlay.getAttribute('aria-hidden') === 'false') {
+          closeNav();
+        }
+      });
 
       drawerBtns.forEach(btn=> btn.addEventListener('click', (e)=>{
         const game = btn.dataset.game;
@@ -3986,7 +4015,6 @@
         document.querySelectorAll('.nav-btn').forEach(n=> n.classList.remove('active'));
         const target = document.querySelector(`.nav-btn[data-game="${game}"]`);
         if (target) target.classList.add('active');
-        // trigger click to change screens if handler attached
         if (target) target.click();
         closeNav();
       }));
